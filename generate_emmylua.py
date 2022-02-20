@@ -260,20 +260,16 @@ def fix_constructor_param(params_text):
     return reConstructorFix.sub(r"\1 \1", params_text)
 
 def fix_return(ret):
-    tuple_contents = reTuple.search(ret)
+    tuple_contents = reTuple.match(ret)
     if tuple_contents:
-        types = re.findall(r"(\w+)(?:,|$)", tuple_contents.group())
-        ret = ""
-        for type in types:
-            ret += f"---@return {type}\n"
-        ret = ret.strip()
+        ret = f"{tuple_contents.group(1)}"
     else:
-        ret = f"---@return {ret}"
+        ret = f"{ret}"
     return ret
 
 def print_func(name, params, ret, typed_params):
     ret = fix_return(ret)
-    fun = f"{typed_params}\n{ret}\nfunction {name}({params}) end".strip()
+    fun = f"{typed_params}\n---@return {ret}\nfunction {name}({params}) end".strip()
     print(fun)
 
 def print_comment(lf):
@@ -778,7 +774,7 @@ for type in types:
             signature = var["signature"]
             m = re.search(r"\s*(.*)\s+([^\(]*)\(([^\)]*)", var["signature"])
             if m:
-                ret = replace_all(m.group(1), replace) or "nil"
+                ret = fix_return(replace_all(m.group(1), replace)) or "nil"
                 if ret.startswith("static"):
                     continue
                 name = m.group(2)
@@ -878,9 +874,6 @@ final_replace_stuff = {
 "    ---@field menu_text_opacity number\n    ---@field menu_text_opacity number": "---@field menu_text_opacity number",
 "---@field find_all_short_tile_codes fun(self, layer: LAYER, short_tile_code: SHORT_TILE_CODE): Array<tuple<integer, integer, LAYER>>":
 "---@field find_all_short_tile_codes fun(self, layer: LAYER, short_tile_code: SHORT_TILE_CODE): integer[][]",
-
-"---@field get_rgba fun(self, ): tuple<integer, integer, integer, integer>":
-"---@field get_rgba fun(self, ): integer, integer, integer, integer",
 
 """---@field keysdown boolean       [] @size: 512
     ---@field keydown any @keydown

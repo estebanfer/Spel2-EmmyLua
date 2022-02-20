@@ -398,8 +398,7 @@ function set_door_target(uid, w, l, t) end
 function set_door(uid, w, l, t) end
 ---Get door target `world`, `level`, `theme`
 ---@param uid integer
----@return integer
----@return integer
+---@return integer, integer, integer
 function get_door_target(uid) end
 ---Set the contents of ENT_TYPE.ITEM_POT, ENT_TYPE.ITEM_CRATE or ENT_TYPE.ITEM_COFFIN `uid` to ENT_TYPE... `item_entity_type`
 ---@param uid integer
@@ -524,12 +523,12 @@ function get_zoom_level() end
 ---Get the game coordinates at the screen position (`x`, `y`)
 ---@param x number
 ---@param y number
----@return number
+---@return number, number
 function game_position(x, y) end
 ---Translate an entity position to screen position to be used in drawing functions
 ---@param x number
 ---@param y number
----@return number
+---@return number, number
 function screen_position(x, y) end
 ---Translate a distance of `x` tiles to screen distance to be be used in drawing functions
 ---@param x number
@@ -538,17 +537,15 @@ function screen_distance(x) end
 ---Get position `x, y, layer` of entity by uid. Use this, don't use `Entity.x/y` because those are sometimes just the offset to the entity
 ---you're standing on, not real level coordinates.
 ---@param uid integer
----@return number
----@return number
+---@return number, number, integer
 function get_position(uid) end
 ---Get interpolated render position `x, y, layer` of entity by uid. This gives smooth hitboxes for 144Hz master race etc...
 ---@param uid integer
----@return number
----@return number
+---@return number, number, integer
 function get_render_position(uid) end
 ---Get velocity `vx, vy` of an entity by uid. Use this, don't use `Entity.velocityx/velocityy` because those are relative to `Entity.overlay`.
 ---@param uid integer
----@return number
+---@return number, number
 function get_velocity(uid) end
 ---Remove item by uid from entity
 ---@param id integer
@@ -779,12 +776,10 @@ function distance(uid_a, uid_b) end
 ---    draw_ctx:draw_rect(sx, sy, sx2, sy2, 4, 0, rgba(255, 255, 255, 255))
 ---end, ON.GUIFRAME)
 ---```
----@return number
----@return number
----@return number
+---@return number, number, number, number
 function get_bounds() end
 ---Gets the current camera position in the level
----@return number
+---@return number, number
 function get_camera_position() end
 ---Set a bit in a number. This doesn't actually change the bit in the entity you pass it, it just returns the new value you can use.
 ---@param flags Flags
@@ -808,7 +803,7 @@ function test_flag(flags, bit) end
 ---@return nil
 function testflag() end
 ---Gets the resolution (width and height) of the screen
----@return integer
+---@return integer, integer
 function get_window_size() end
 ---Steal input from a Player or HH.
 ---@param uid integer
@@ -1159,17 +1154,17 @@ function define_extra_spawn(do_spawn, is_valid, num_spawns_frontlayer, num_spawn
 ---Returns missing spawns in the front layer and missing spawns in the back layer in that order.
 ---The value only makes sense after level generation is complete, aka after `ON.POST_LEVEL_GENERATION` has run.
 ---@param extra_spawn_chance_id integer
----@return integer
+---@return integer, integer
 function get_missing_extra_spawns(extra_spawn_chance_id) end
 ---Transform a position to a room index to be used in `get_room_template` and `PostRoomGenerationContext.set_room_template`
 ---@param x number
 ---@param y number
----@return integer
+---@return integer, integer
 function get_room_index(x, y) end
 ---Transform a room index into the top left corner position in the room
 ---@param x integer
 ---@param y integer
----@return number
+---@return number, number
 function get_room_pos(x, y) end
 ---Get the room template given a certain index, returns `nil` if coordinates are out of bounds
 ---@param x integer
@@ -1267,15 +1262,14 @@ function rgba(r, g, b, a) end
 ---```
 ---@param size number
 ---@param text string
----@return number
+---@return number, number
 function draw_text_size(size, text) end
 ---Create image from file. Returns a tuple containing id, width and height.
 ---@param path string
----@return IMAGE
----@return integer
+---@return IMAGE, integer, integer
 function create_image(path) end
 ---Current mouse cursor position in screen coordinates.
----@return number
+---@return number, number
 function mouse_position() end
 ---Returns: [ImGuiIO](#imguiio) for raw keyboard, mouse and xinput gamepad stuff. This is kinda bare and might change.
 ---- Note: The clicked/pressed actions only make sense in `ON.GUIFRAME`.
@@ -3912,7 +3906,7 @@ local function GuiDrawContext_draw_image_rotated(self, image, rect, uv_rect, col
 
 ---@class VanillaRenderContext
     ---@field draw_text fun(self, text: string, x: number, y: number, scale_x: number, scale_y: number, color: Color, alignment: integer, fontstyle: integer): nil
-    ---@field draw_text_size fun(self, text: string, scale_x: number, scale_y: number, fontstyle: integer): tuple<number, number>
+    ---@field draw_text_size fun(self, text: string, scale_x: number, scale_y: number, fontstyle: integer): number, number
     ---@field draw_screen_texture VanillaRenderContext_draw_screen_texture
     ---@field draw_world_texture VanillaRenderContext_draw_world_texture
 
@@ -3992,7 +3986,7 @@ local function VanillaRenderContext_draw_world_texture(self, texture_id, row, co
     ---@field extrude fun(self, amount: number): AABB
     ---@field offset fun(self, off_x: number, off_y: number): AABB
     ---@field area fun(self, ): number
-    ---@field center fun(self, ): tuple<number, number>
+    ---@field center fun(self, ): number, number
     ---@field width fun(self, ): number
     ---@field height fun(self, ): number
 
