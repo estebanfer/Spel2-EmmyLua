@@ -97,6 +97,7 @@ known_casts = []
 aliases = []
 lualibs = []
 enums = []
+constructors = []
 replace = {
     #"nil": "void",
     #"bool": "boolean",
@@ -256,7 +257,7 @@ def cpp_params_to_emmy_lua_fun(params_text):
 
 reConstructorFix = re.compile(r"const (\w+)(?: \w+)?")
 def fix_constructor_param(params_text):
-    return reConstructorFix.sub(r"\1: \1", params_text)
+    return reConstructorFix.sub(r"\1 \1", params_text)
 
 def fix_return(ret):
     tuple_contents = reTuple.search(ret)
@@ -272,8 +273,8 @@ def fix_return(ret):
 
 def print_func(name, params, ret, typed_params):
     ret = fix_return(ret)
-    fun = f"{ret}\nfunction {name}({params}) end".strip()
-    print(f"{typed_params}\n{fun}")
+    fun = f"{typed_params}\n{ret}\nfunction {name}({params}) end".strip()
+    print(fun)
 
 def print_comment(lf):
     if lf["comment"]:
@@ -518,17 +519,30 @@ for file in api_files:
                         param = fix_constructor_param(param)
                     elif param == fun["name"]:
                         continue
-                    else:
-                        param, n_param = cpp_params_to_emmy_lua(param) #TODO
-                    sig = f"static {cpp_type} new({param})"
-                    vars.append(
-                        {
-                            "name": cpp_type,
-                            "type": "",
-                            "signature": sig,
-                            "comment": fun["comment"],
-                        }
+                    constructor = next(
+                        (item for item in constructors if item["name"] == cpp_type), dict()
                     )
+                    if "name" in constructor:
+                        constructor["list"].append(
+                            {
+                                "name": cpp_type,
+                                "param": param,
+                                "comment": fun["comment"],
+                            }
+                        )
+                    else:
+                        constructors.append(
+                            {
+                                "name": cpp_type,
+                                "list": [
+                                    {
+                                        "name": cpp_type,
+                                        "param": param,
+                                        "comment": fun["comment"],
+                                    }
+                                ]
+                            }
+                        )
             elif cpp_name in underlying_cpp_type["member_funs"]:
                 for fun in underlying_cpp_type["member_funs"][cpp_name]:
                     ret = fun["return"]
@@ -703,8 +717,6 @@ for lf in funcs:
             params = (m or m2).group(1)
             typed_params, params = cpp_params_to_emmy_lua(params) #TODO
             typed_params = replace_all(typed_params, replace).strip()
-        if "float" in typed_params:
-            asd = True
         name = lf["name"]
         print_comment(lf)
         print_func(name, params, ret, typed_params)
@@ -803,10 +815,28 @@ for type in types:
             index = 0
             for overload in funcs:
                 if index+1 < len(funcs):
-                    print(f"---@overload fun(self, {overload['param']}): {overload['ret']}")
+                    overload_param = f"self, {overload['param']}" if overload["param"] != "" else "self"
+                    print(f"---@overload fun({overload_param}): {overload['ret']}")
                 else:
+                    params = f"self, {params}" if params != "" else "self"
                     print(f"local function {class_name}({params}) end\n")
                 index += 1
+
+print("\n--## Constructors")
+
+for constructor in constructors:
+    print(f"\n{constructor['name']} = nil")
+    for const in constructor["list"]:
+        typed_params, params = cpp_params_to_emmy_lua(const["param"])
+        typed_params.strip()
+        typed_params = replace_all(typed_params, replace)
+
+        name = f"{constructor['name']}.new"
+        params = f"self, {params}" if params != "" else "self"
+
+        print_comment(const)
+        print_func(name, params, constructor["name"], typed_params)
+
 
 print("\n--## Enums\n")
 enumStr = ""
